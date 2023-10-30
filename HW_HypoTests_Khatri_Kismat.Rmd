@@ -1,0 +1,147 @@
+---
+title: "Intro to DS - Hypothesis Tests, T-test, 2-sample T-test, ANOVA, Chi-squared"
+author: "GWU Intro to Data Science DATS 6101"
+# date: "today"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: hide
+    number_sections: false
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+---
+
+```{r init, include=FALSE}
+# some of common options (and the defaults) are: 
+# include=T, eval=T, echo=T, results='hide'/'asis'/'markup',..., collapse=F, warning=T, message=T, error=T, cache=T, fig.width=6, fig.height=4, fig.dim=c(6,4) #inches, fig.align='left'/'center','right', 
+library(ezids)
+# knitr::opts_chunk$set(warning = F, results = "markup", message = F)
+knitr::opts_chunk$set(warning = F, results = "hide", message = F)
+options(scientific=T, digits = 3) 
+# options(scipen=9, digits = 3) 
+# ‘scipen’: integer. A penalty to be applied when deciding to print numeric values in fixed or exponential notation.  Positive values bias towards fixed and negative towards scientific notation: fixed notation will be preferred unless it is more than ‘scipen’ digits wider.
+# use scipen=999 to prevent scientific notation at all times
+```
+
+# HW Assignment - Hypothesis Testing 
+
+This exercise uses the same graduate school admissions dataset from last homework. The dataset is called `gradAdmit` on api.regression.fit, or as a local file `LogRegAdmit.csv`.  
+The variables in the dataset are:  
+
+* `admit`: 0 or 1 (False or True)
+* `gre`: gre score
+* `gpa`: grade point average at undergraduate level
+* `rank`: the ranking of the applicant’s undergraduate institute, 1, 2, 3, or 4
+
+
+## Grad School Admissions
+
+
+### Question 1
+
+**Same as last homework, import the dataset as Adata, and make sure the data type for the variables are set properly for categorical variables.**
+
+```{r q01}
+#Adata = api_rfit("/Users/kismatkhatri/Documents/GitHub/DATS_6101_Fall2022/Assignments/HW_Hypothesis/LogRegAdmit")
+Adata <- data.frame(read.csv("LogRegAdmit.csv"))
+Adata
+                    
+Adata$admit <- as.factor(Adata$admit)
+Adata$rank <- as.factor(Adata$rank)
+Adata 
+```
+After the data set was read in, the data set was saved as Adata. For further analysis, the variables admit and rank are transformed into categorical factors. The function "as.factor()" is used to do the conversion.
+
+Answer answer answer. Lorem ipsum dolor sit amet...
+
+### Question 2
+
+**Use the `outlierKD2()` function, remove the outliers for gre and gpa. Save the resulting dataframe as Adata2. You will need to do this in two steps, removing outliers for one variable at a time. How many NA values are in gre and in gpa with the resulting dataframe *Adata2*? **
+
+Answer answer answer. Lorem ipsum dolor sit amet...
+```{r}
+Adata2 = outlierKD2(Adata, gre, rm=TRUE, boxplt=TRUE, histogram=TRUE, qqplt=TRUE)
+Adata2 = outlierKD2(Adata2, gpa, rm=TRUE, boxplt=TRUE, histogram=TRUE, qqplt=TRUE)
+xkablesummary(Adata2)
+```
+
+There are four NA values  in gre and one NA value in gpa with the resulting dataframe *Adata2*
+
+### Question 3
+
+**Like last time, separate the two subsets again, for admitted and rejected. **
+
+Answer answer answer. Lorem ipsum dolor sit amet...
+```{r}
+admitted <- subset(Adata,admit==1)
+rejected <- subset(Adata,admit==0)
+```
+
+admitted and rejected subset are create.
+
+### Question 4
+
+**We were a little careless last time. Let us check for normality on the numerical variables. Let us use histogram (use `ggplot()`) to check the quantitative variables for the admitted and rejected subsets. Make a brief comment on the results. **
+
+Answer answer answer. Lorem ipsum dolor sit amet...
+```{r}
+loadPkg("ggplot2")
+
+ggplot(data=admitted, aes(gre)) + 
+  geom_histogram(breaks=seq(200, 800, by = 40))+
+  labs(title="Histogram of Gre for Admittted subsets") +
+  labs(x="GRE", y="Frequency") 
+
+ggplot(data=rejected, aes(gre)) + 
+  geom_histogram(breaks=seq(200, 800, by = 40))+
+  labs(title="Histogram of Gre for rejected subsets") +
+  labs(x="GRE", y="Frequency") 
+
+ggplot(data=admitted, aes(gpa)) + 
+  geom_histogram(breaks=seq(2, 4, by = .10))+
+  labs(title="Histogram of GPA for Admittted subsets") +
+  labs(x="GPA", y="Frequency") 
+
+ggplot(data=rejected, aes(gpa)) + 
+  geom_histogram(breaks=seq(2, 4, by = .10))+
+  labs(title="Histogram of GPA for rejected subsets") +
+  labs(x="GPA", y="Frequency") 
+```
+
+The Histogram for both the Gre and Gpa of Admitted and rejected student look like bell shaped.The Gre score at 800 is little more for admitted student then rejected student but both have small peak. Similarly, The Gpa at 4 for admitted student is more then the rejected student.
+
+### Question 5
+
+**Does the two subgroups have different gre average and gpa average? Use the standard $\alpha$ = 0.05. What are the p-values for the test on gre and gpa? What are your conclusions from the tests? **
+
+Answer answer answer. Lorem ipsum dolor sit amet...
+```{r}
+t_test_gre = t.test(admitted$gre, rejected$gre)
+t_test_gre
+t_test_gpa = t.test(admitted$gpa, rejected$gpa)
+t_test_gpa
+```
+
+The Two sample t-test for both Gre and Gpa have small p-value. So we rejected the Null hypothesis and accept the alternative hypothesis of two group i.e admitted and rejected students for both Gre and Gpa have different mean.
+
+### Question 6
+
+**From *Adata2*, test whether students from the four ranks have the same average gre or not. And also test if they have the same average gpa or not. Use "aov" funtion. Making brief comments on the results is optional.**
+
+Answer answer answer. Lorem ipsum dolor sit amet...
+```{r}
+anova_Gre = aov(gre ~ rank, data=Adata2)
+summary(anova_Gre)
+anova_Gpa = aov(gpa ~ rank, data=Adata2)
+summary(anova_Gpa)
+```
+
+The  Anova test of Gre and Gpa with four rank shows fail to reject the null hypothesis of four ranks having same gre and gpa mean.
+
+
+
+
